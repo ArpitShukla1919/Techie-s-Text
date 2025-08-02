@@ -1,9 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { Signup } from './pages/Signup'
-import { Signin } from './pages/Signin'
-import { Blog } from './pages/Blog'
-import { Blogs } from "./pages/Blogs";
-import { Publish } from './pages/Publish';
+import { Signup } from './pages/signup'
+import { Signin } from './pages/signin'
+import { Blog } from './pages/blog'
+import { Blogs } from "./pages/blogs";
+import { Publish } from './pages/publish';
+import Home from './pages';
 
 function App() {
 
@@ -11,6 +12,7 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Home />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/signin" element={<Signin />} />
           <Route path="/blog/:id" element={<Blog />} />

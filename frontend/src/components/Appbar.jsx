@@ -27,13 +27,12 @@ export const Appbar = () => {
     navigate("/signin");
   };
 
-  // ✅ Fix: safely get the name (fallback "Guest")
   const avname = user?.name || "Guest"; 
   console.log(avname, "final name");
 
   return (
     <div className="max-w-7xl mx-auto border-b flex items-center justify-between px-4 py-4 relative">
-      <Link to={"/blogs"} className="flex flex-col justify-center cursor-pointer">
+      <Link to={"/dashboard"} className="flex flex-col justify-center cursor-pointer">
         <img src="/mind.png" className="h-16" />
       </Link>
 

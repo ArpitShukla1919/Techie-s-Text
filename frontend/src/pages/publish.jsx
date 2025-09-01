@@ -3,7 +3,8 @@ import { Appbar } from "../components/Appbar";
 import axios from "axios";
 import { BACKEND_URL } from "../config";
 import { useNavigate } from "react-router-dom";
-import { Editor } from "@tinymce/tinymce-react";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css"; // Quill styles
 
 export const Publish = () => {
   const [title, setTitle] = useState("");
@@ -49,18 +50,25 @@ export const Publish = () => {
       <Appbar />
       <div className="flex justify-center w-full pt-8">
         <div className="max-w-screen-lg w-full space-y-4">
+          {/* Title input */}
           <input
             onChange={(e) => setTitle(e.target.value)}
             type="text"
-            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg 
+                       focus:ring-blue-500 focus:border-blue-500 block p-2.5"
             placeholder="Title"
           />
+
+          {/* Short description input */}
           <input
             onChange={(e) => setShortDesc(e.target.value)}
             type="text"
-            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg 
+                       focus:ring-blue-500 focus:border-blue-500 block p-2.5"
             placeholder="Short description (for preview cards)"
           />
+
+          {/* Quill Editor */}
           <TextEditor onChange={(value) => setDescription(value)} />
 
           {/* Buttons */}
@@ -68,7 +76,9 @@ export const Publish = () => {
             <button
               onClick={() => handlePublish(true)}
               type="button"
-              className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:ring-4 focus:ring-gray-100"
+              className="inline-flex items-center px-5 py-2.5 text-sm font-medium 
+                         text-center text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 
+                         focus:ring-4 focus:ring-gray-100"
             >
               Save as Draft
             </button>
@@ -76,7 +86,9 @@ export const Publish = () => {
             <button
               onClick={() => handlePublish(false)}
               type="button"
-              className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-200 hover:bg-blue-800"
+              className="inline-flex items-center px-5 py-2.5 text-sm font-medium 
+                         text-center text-white bg-blue-700 rounded-lg 
+                         focus:ring-4 focus:ring-blue-200 hover:bg-blue-800"
             >
               Publish Post
             </button>
@@ -87,17 +99,41 @@ export const Publish = () => {
   );
 };
 
+/* Quill Editor Component */
 function TextEditor({ onChange }) {
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline", "strike", "blockquote"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["link", "image"],
+      ["code-block"],
+      ["clean"],
+    ],
+  };
+
+  const formats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "blockquote",
+    "list",
+    "bullet",
+    "link",
+    "image",
+    "code-block",
+  ];
+
   return (
-    <Editor
-      apiKey="ym2q1u09mz79hd3hvzz9shham0bkuxa89i9pabahnyyy7omy"
-      init={{
-        height: 300,
-        menubar: false,
-        plugins: "lists link image code",
-        toolbar: "undo redo | bold italic | bullist numlist | link image | code",
-      }}
-      onEditorChange={(content) => onChange(content)}
+    <ReactQuill
+      theme="snow"
+      modules={modules}
+      formats={formats}
+      onChange={onChange}
+      className="bg-white rounded-lg border border-gray-300"
+      style={{ minHeight: "300px" }}
     />
   );
 }

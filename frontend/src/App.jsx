@@ -7,6 +7,7 @@ import { Blogs } from "./pages/blogs";
 import { Publish } from './pages/publish';
 import Home from './pages';
 import { Profile } from './pages/profile';
+import Dashboard from './pages/dashboard'
 
 function App() {
 
@@ -15,6 +16,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/signin" element={<Signin />} />
           <Route path="/blog/:id" element={<Blog />} />

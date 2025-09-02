@@ -8,6 +8,8 @@ import { Publish } from './pages/publish';
 import Home from './pages';
 import { Profile } from './pages/profile';
 import Dashboard from './pages/dashboard'
+import Library from './pages/library'
+import Contactus from './pages/contact-us'
 
 function App() {
 
@@ -22,7 +24,10 @@ function App() {
           <Route path="/blog/:id" element={<Blog />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/publish" element={<Publish />} />
+          <Route path="/publish/:id" element={<Publish />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path='/library' element={<Library/>} />
+          <Route path='/contact-us' element={<Contactus/>}/>
         </Routes>
       </BrowserRouter>
     </>

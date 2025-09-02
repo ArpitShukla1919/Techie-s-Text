@@ -114,7 +114,13 @@ const BlogTiles = ({ blogs = [], variant = "default" }) => {
             <p className="text-sm text-gray-400 mt-2">
               Last updated: {new Date(blog.updatedAt).toLocaleDateString()}
             </p>
-            <button className="px-3 py-1 mt-4 cursor-help bg-green-800 text-white rounded-xl">
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // prevent parent card click
+                navigate(`/publish/${blog.id}`);
+              }}
+              className="px-3 py-1 mt-4 bg-green-800 text-white rounded-xl hover:bg-green-900 transition"
+            >
               Edit Post
             </button>
           </div>

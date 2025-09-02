@@ -1,96 +1,115 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Appbar } from "../components/Appbar";
 import axios from "axios";
 import { BACKEND_URL } from "../config";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ReactQuill from "react-quill-new";
-import "react-quill-new/dist/quill.snow.css"; // Quill styles
+import "react-quill-new/dist/quill.snow.css";
 
 export const Publish = () => {
   const [title, setTitle] = useState("");
   const [shortDesc, setShortDesc] = useState("");
   const [description, setDescription] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+  const { id } = useParams();
   const data = localStorage.getItem("user");
   const parsedData = JSON.parse(data);
   const token = parsedData?.token;
 
-  const handlePublish = async (isDraft) => {
-    try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/v1/blog`,
-        {
-          title,
-          shortDescription: shortDesc,
-          content: description,
-          status: isDraft ? "DRAFT" : "PUBLISHED",
-        },
-        {
-          headers: {
-            Authorization: token,
-          },
+  useEffect(() => {
+    if (!id) return;
+    const fetchBlog = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${BACKEND_URL}/api/v1/blog/${id}`, {
+          headers: { Authorization: token },
+        });
+        const blog = res.data.blog;
+        if (blog) {
+          setTitle(blog.title || "");
+          setShortDesc(blog.shortDescription || "");
+          setDescription(blog.content || "");
         }
-      );
+      } catch (err) {
+        console.error("Error fetching blog:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlog();
+  }, [id, token]);
 
-      if (isDraft) {
-        alert("Blog saved as draft ✅");
-        navigate("/profile");
+  const handleSave = async (isDraft) => {
+    try {
+      if (id) {
+        await axios.put(
+          `${BACKEND_URL}/api/v1/blog/${id}`,
+          {
+            title,
+            shortDescription: shortDesc,
+            content: description,
+            status: isDraft ? "DRAFT" : "PUBLISHED",
+          },
+          { headers: { Authorization: token } }
+        );
+        alert("Blog updated ✅");
+        navigate(`/blog/${id}`);
       } else {
-        navigate(`/blog/${response.data.id}`);
+        const res = await axios.post(
+          `${BACKEND_URL}/api/v1/blog`,
+          {
+            title,
+            shortDescription: shortDesc,
+            content: description,
+            status: isDraft ? "DRAFT" : "PUBLISHED",
+          },
+          { headers: { Authorization: token } }
+        );
+        navigate(`/blog/${res.data.id}`);
       }
     } catch (err) {
-      console.error("Error publishing blog:", err);
-      alert("Failed to publish blog ❌");
+      console.error("Error saving blog:", err);
+      alert("Failed ❌");
     }
   };
+
+  if (loading) return <p className="p-5 text-center">Loading...</p>;
 
   return (
     <div>
       <Appbar />
       <div className="flex justify-center w-full pt-8">
         <div className="max-w-screen-lg w-full space-y-4">
-          {/* Title input */}
           <input
+            value={title}
             onChange={(e) => setTitle(e.target.value)}
             type="text"
-            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg 
-                       focus:ring-blue-500 focus:border-blue-500 block p-2.5"
             placeholder="Title"
+            className="w-full bg-gray-50 border rounded-lg p-2.5"
           />
-
-          {/* Short description input */}
           <input
+            value={shortDesc}
             onChange={(e) => setShortDesc(e.target.value)}
             type="text"
-            className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg 
-                       focus:ring-blue-500 focus:border-blue-500 block p-2.5"
-            placeholder="Short description (for preview cards)"
+            placeholder="Short description"
+            className="w-full bg-gray-50 border rounded-lg p-2.5"
           />
+          <TextEditor value={description} onChange={setDescription} />
 
-          {/* Quill Editor */}
-          <TextEditor onChange={(value) => setDescription(value)} />
-
-          {/* Buttons */}
           <div className="flex gap-4 mt-4">
             <button
-              onClick={() => handlePublish(true)}
-              type="button"
-              className="inline-flex items-center px-5 py-2.5 text-sm font-medium 
-                         text-center text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 
-                         focus:ring-4 focus:ring-gray-100"
+              onClick={() => handleSave(true)}
+              className="px-5 py-2.5 bg-gray-200 rounded-lg"
             >
               Save as Draft
             </button>
-
             <button
-              onClick={() => handlePublish(false)}
-              type="button"
-              className="inline-flex items-center px-5 py-2.5 text-sm font-medium 
-                         text-center text-white bg-blue-700 rounded-lg 
-                         focus:ring-4 focus:ring-blue-200 hover:bg-blue-800"
+              onClick={() => handleSave(false)}
+              className="px-5 py-2.5 bg-blue-700 text-white rounded-lg"
             >
-              Publish Post
+              {id ? "Update Post" : "Publish Post"}
             </button>
           </div>
         </div>
@@ -99,8 +118,7 @@ export const Publish = () => {
   );
 };
 
-/* Quill Editor Component */
-function TextEditor({ onChange }) {
+function TextEditor({ value, onChange }) {
   const modules = {
     toolbar: [
       [{ header: [1, 2, 3, false] }],
@@ -111,7 +129,6 @@ function TextEditor({ onChange }) {
       ["clean"],
     ],
   };
-
   const formats = [
     "header",
     "bold",
@@ -129,10 +146,11 @@ function TextEditor({ onChange }) {
   return (
     <ReactQuill
       theme="snow"
+      value={value}
+      onChange={onChange}
       modules={modules}
       formats={formats}
-      onChange={onChange}
-      className="bg-white rounded-lg border border-gray-300"
+      className="bg-white border rounded-lg"
       style={{ minHeight: "300px" }}
     />
   );

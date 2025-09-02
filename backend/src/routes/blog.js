@@ -27,42 +27,6 @@ blogRouter.use("/*", async (c, next) => {
   }
 });
 
-// blogRouter.post("/", async (c) => {
-//   const body = await c.req.json();
-
-//   // Basic validation
-//   if (!body.title || !body.shortDescription || !body.content) {
-//     c.status(400);
-//     return c.json({ message: "Missing required fields" });
-//   }
-
-//   // Default to draft if not provided
-//   const status = body.status === "published" ? "PUBLISHED" : "DRAFT";
-
-//   const authorId = c.get("userId");
-
-//   console.log(authorId,"888888888888888888888888888888")
-
-//   const prisma = new PrismaClient({
-//     datasourceUrl: c.env.DATABASE_URL,
-//   }).$extends(withAccelerate());
-
-//   const blog = await prisma.blog.create({
-//     data: {
-//       title: body.title,
-//       shortDescription: body.shortDescription,
-//       content: body.content,
-//       status, // ✅ save draft/published
-//       authorId: Number(authorId),
-//     },
-//   });
-
-//   return c.json({
-//     id: blog.id,
-//     status: blog.status,
-//   });
-// });
-
 
 blogRouter.post("/", async (c) => {
   const body = await c.req.json();
@@ -112,36 +76,91 @@ blogRouter.post("/", async (c) => {
   });
 });
 
-blogRouter.put("/", async (c) => {
+// blogRouter.put("/", async (c) => {
+//   const body = await c.req.json();
+//   const { success } = updateBlogInput.safeParse(body);
+//   if (!success) {
+//     c.status(411);
+//     return c.json({
+//       message: "Inputs not correct",
+//     });
+//   }
+
+//   const prisma = new PrismaClient({
+//     datasourceUrl: c.env.DATABASE_URL,
+//   }).$extends(withAccelerate());
+
+//   const blog = await prisma.blog.update({
+//     where: {
+//       id: body.id,
+//     },
+//     data: {
+//       title: body.title,
+//       content: body.content,
+//     },
+//   });
+
+//   return c.json({
+//     id: blog.id,
+//   });
+// });
+
+blogRouter.put("/:id", async (c) => {
+  const id = Number(c.req.param("id"));
   const body = await c.req.json();
-  const { success } = updateBlogInput.safeParse(body);
-  if (!success) {
-    c.status(411);
-    return c.json({
-      message: "Inputs not correct",
-    });
+
+  // Validate input
+  if (!body.title || !body.shortDescription || !body.content) {
+    c.status(400);
+    return c.json({ message: "Missing required fields" });
+  }
+
+  const userId = c.get("userId");
+  if (!userId) {
+    c.status(403);
+    return c.json({ message: "Unauthorized" });
   }
 
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
 
-  const blog = await prisma.blog.update({
-    where: {
-      id: body.id,
-    },
-    data: {
-      title: body.title,
-      content: body.content,
-    },
-  });
+  try {
+    // ✅ Ensure blog belongs to the current user
+    const existingBlog = await prisma.blog.findFirst({
+      where: {
+        id,
+        authorId: Number(userId),
+      },
+    });
 
-  return c.json({
-    id: blog.id,
-  });
+    if (!existingBlog) {
+      c.status(404);
+      return c.json({ message: "Blog not found or not yours" });
+    }
+
+    // ✅ Update blog
+    const updatedBlog = await prisma.blog.update({
+      where: { id },
+      data: {
+        title: body.title,
+        shortDescription: body.shortDescription,
+        content: body.content,
+        status: body.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",
+      },
+    });
+
+    return c.json({
+      message: "Blog updated successfully",
+      blog: updatedBlog,
+    });
+  } catch (e) {
+    console.error("Error updating blog:", e);
+    c.status(500);
+    return c.json({ message: "Error while updating blog post" });
+  }
 });
 
-// Todo: add pagination
 blogRouter.get("/bulk", async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
@@ -185,6 +204,7 @@ blogRouter.get("/:id", async (c) => {
         id: true,
         title: true,
         content: true,
+        shortDescription:true,
         updatedAt: true,
         author: {
           select: {
